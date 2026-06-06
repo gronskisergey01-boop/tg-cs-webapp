@@ -65,14 +65,12 @@
 
     <script>
         const tg = window.Telegram.WebApp;
-        tg.expand(); // раскрыть на весь экран
+        tg.expand();
 
-        // Получаем переданные параметры (тип кейса, ID пользователя)
         const params = new URLSearchParams(tg.initDataUnsafe?.start_param || "");
         const caseIndex = params.get('caseIndex') || 0;
         const userId = tg.initDataUnsafe?.user?.id;
 
-        // Скины, которые будем показывать в анимации (можно синхронизировать с ботом)
         const skins = [
             "🔹 P250 | Sand Dune",
             "🔹 MP7 | Forest DDPAT",
@@ -102,7 +100,6 @@
             spinBtn.disabled = true;
             resultText.textContent = '';
 
-            // Быстрая прокрутка названий
             let steps = 20;
             for (let i = 0; i < steps; i++) {
                 const randomSkin = skins[Math.floor(Math.random() * skins.length)];
@@ -111,15 +108,12 @@
                 await sleep(60);
             }
 
-            // Фиксируем окончательный скин (сообщим боту, а бот выдаст реальный)
-            // Пока просто отправим боту запрос через sendData
             const dataToSend = JSON.stringify({
                 action: "open_case",
                 userId: userId,
                 caseIndex: caseIndex
             });
 
-            // Показываем финальную анимацию (заглушка)
             slot.style.transform = 'translateY(0)';
             slot.textContent = '✨ Обработка...';
 

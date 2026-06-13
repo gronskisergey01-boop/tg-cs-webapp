@@ -13,7 +13,7 @@
 
         body {
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             color: white;
             min-height: 100vh;
             overflow-x: hidden;
@@ -27,17 +27,21 @@
 
         .header {
             text-align: center;
-            padding: 20px 0;
-            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.4);
             border-radius: 15px;
             margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .balance {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: bold;
-            color: #ffd700;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            background: linear-gradient(45deg, #ffd700, #ffaa00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: none;
         }
 
         .cases-grid {
@@ -48,19 +52,20 @@
         }
 
         .case-card {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.08);
             border-radius: 15px;
             padding: 15px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
             border: 2px solid transparent;
+            backdrop-filter: blur(5px);
         }
 
         .case-card:hover {
             transform: translateY(-5px);
             border-color: #ffd700;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.2);
         }
 
         .case-image {
@@ -72,21 +77,35 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 60px;
+            overflow: hidden;
+        }
+
+        .case-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
 
         .case-name {
             font-size: 16px;
             font-weight: bold;
             margin-bottom: 5px;
+            color: #fff;
         }
 
         .case-price {
             color: #ffd700;
             font-weight: bold;
+            font-size: 14px;
         }
 
-        /* Окно открытия кейса */
+        .case-description {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        /* Экран открытия */
         .opening-screen {
             display: none;
             position: fixed;
@@ -107,13 +126,14 @@
         }
 
         .roulette-container {
-            width: 100%;
-            height: 200px;
+            width: 90%;
+            height: 250px;
             position: relative;
             overflow: hidden;
             margin: 20px 0;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.03);
             border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
         }
 
         .roulette-strip {
@@ -124,7 +144,7 @@
         }
 
         .roulette-item {
-            min-width: 150px;
+            min-width: 160px;
             height: 100%;
             display: flex;
             flex-direction: column;
@@ -135,14 +155,17 @@
             padding: 10px;
         }
 
-        .roulette-item .item-image {
-            font-size: 40px;
+        .roulette-item img {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
             margin-bottom: 10px;
         }
 
         .roulette-item .item-name {
             font-size: 12px;
             text-align: center;
+            font-weight: bold;
         }
 
         .pointer {
@@ -152,9 +175,23 @@
             transform: translateX(-50%);
             width: 4px;
             height: 100%;
+            background: linear-gradient(180deg, #ffd700, #ffaa00);
+            z-index: 10;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+        }
+
+        /* Эффект свечения для указателя */
+        .pointer::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
             background: #ffd700;
-            z-index: 1;
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
         }
 
         .result-screen {
@@ -165,13 +202,20 @@
 
         .result-screen.active {
             display: block;
-            animation: fadeIn 0.5s ease;
+            animation: fadeInUp 0.5s ease;
         }
 
         .result-skin {
-            font-size: 60px;
-            margin: 20px 0;
-            animation: pulse 1s infinite;
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            animation: float 2s ease-in-out infinite;
+        }
+
+        .result-skin img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
 
         .result-name {
@@ -182,9 +226,10 @@
 
         .result-rarity {
             font-size: 18px;
-            padding: 5px 15px;
-            border-radius: 5px;
+            padding: 8px 20px;
+            border-radius: 20px;
             display: inline-block;
+            margin: 10px 0;
         }
 
         .btn {
@@ -198,16 +243,23 @@
             cursor: pointer;
             transition: all 0.3s ease;
             margin: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .btn:hover {
             transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
         }
 
         .btn-secondary {
             background: rgba(255, 255, 255, 0.1);
             color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .close-btn {
@@ -219,44 +271,99 @@
             color: white;
             background: none;
             border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.8); }
-            to { opacity: 1; transform: scale(1); }
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
+        /* Анимации */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Конфетти */
         .sparkle {
-            position: absolute;
+            position: fixed;
             pointer-events: none;
-            animation: sparkle 1s ease-out;
+            animation: sparkle 1s ease-out forwards;
+            z-index: 1001;
         }
 
         @keyframes sparkle {
-            0% { transform: translate(0, 0) scale(1); opacity: 1; }
-            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+            0% {
+                transform: translate(0, 0) scale(1) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty)) scale(0) rotate(360deg);
+                opacity: 0;
+            }
         }
 
+        /* История */
         .history-item {
             background: rgba(255, 255, 255, 0.05);
-            padding: 10px;
+            padding: 15px;
             border-radius: 10px;
             margin: 10px 0;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
         }
 
-        .history-item .skin-image {
-            font-size: 30px;
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
         }
 
+        .history-item img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+
+        .history-info {
+            flex: 1;
+        }
+
+        .history-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .history-details {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .history-rarity {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        /* Табы */
         .tabs {
             display: flex;
             margin: 20px 0;
@@ -265,34 +372,54 @@
 
         .tab {
             flex: 1;
-            padding: 10px;
+            padding: 12px;
             text-align: center;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.08);
             border-radius: 10px;
             cursor: pointer;
             transition: all 0.3s ease;
+            font-weight: bold;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .tab.active {
-            background: #ffd700;
+            background: linear-gradient(45deg, #ffd700, #ffaa00);
             color: black;
+            border: none;
         }
 
         .warning-message {
             background: rgba(255, 0, 0, 0.2);
+            border: 1px solid rgba(255, 0, 0, 0.3);
             padding: 15px;
             border-radius: 10px;
             margin: 20px 0;
             text-align: center;
             display: none;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        /* Загрузка */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
     <div class="app">
         <div class="header">
-            <div style="font-size: 14px; opacity: 0.7;">ВАШ БАЛАНС</div>
-            <div class="balance" id="balance">0 💰</div>
+            <div style="font-size: 14px; opacity: 0.7; margin-bottom: 5px;">ВАШ БАЛАНС</div>
+            <div class="balance" id="balance">Загрузка...</div>
         </div>
 
         <div class="tabs">
@@ -301,7 +428,12 @@
         </div>
 
         <div id="cases-tab">
-            <div class="cases-grid" id="casesList"></div>
+            <div class="cases-grid" id="casesList">
+                <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.5);">
+                    <div class="loading"></div>
+                    <p style="margin-top: 20px;">Загрузка кейсов...</p>
+                </div>
+            </div>
         </div>
 
         <div id="history-tab" style="display: none;">
@@ -315,7 +447,7 @@
         
         <div style="text-align: center; margin-bottom: 20px;">
             <h2>🎰 ОТКРЫТИЕ КЕЙСА</h2>
-            <p id="openingCaseName"></p>
+            <p id="openingCaseName" style="font-size: 18px; margin-top: 10px; opacity: 0.8;"></p>
         </div>
 
         <div class="roulette-container" id="roulette">
@@ -355,39 +487,47 @@
         tg.ready();
         tg.expand();
 
-        // Получаем user_id из Telegram WebApp
+        // Получаем user_id
         const userId = tg.initDataUnsafe?.user?.id || 1;
 
         // Загрузка данных пользователя
         async function loadUserData() {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    action: 'get_user',
-                    user_id: userId
-                })
-            });
-            const data = await response.json();
-            if (data.success) {
-                userData = data.user;
-                updateBalance(userData.balance);
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        action: 'get_user',
+                        user_id: userId
+                    })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    userData = data.user;
+                    updateBalance(userData.balance);
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
             }
         }
 
         // Загрузка кейсов
         async function loadCases() {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    action: 'get_cases',
-                    user_id: userId
-                })
-            });
-            const data = await response.json();
-            if (data.success) {
-                displayCases(data.cases);
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        action: 'get_cases',
+                        user_id: userId
+                    })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    displayCases(data.cases);
+                }
+            } catch (error) {
+                console.error('Error loading cases:', error);
             }
         }
 
@@ -396,9 +536,14 @@
             const container = document.getElementById('casesList');
             container.innerHTML = cases.map(c => `
                 <div class="case-card" onclick="selectCase(${c.id})">
-                    <div class="case-image">📦</div>
+                    <div class="case-image">
+                        <img src="${c.image_url || 'https://via.placeholder.com/120'}" 
+                             alt="${c.name}"
+                             onerror="this.parentElement.innerHTML='📦'">
+                    </div>
                     <div class="case-name">${c.name}</div>
                     <div class="case-price">💰 ${c.price.toFixed(2)}</div>
+                    ${c.description ? `<div class="case-description">${c.description}</div>` : ''}
                 </div>
             `).join('');
         }
@@ -407,20 +552,24 @@
         async function selectCase(caseId) {
             if (isOpening) return;
             
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    action: 'get_case',
-                    user_id: userId,
-                    case_id: caseId
-                })
-            });
-            const data = await response.json();
-            
-            if (data.success) {
-                currentCase = data.case;
-                showOpeningScreen(data.case);
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        action: 'get_case',
+                        user_id: userId,
+                        case_id: caseId
+                    })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentCase = data.case;
+                    showOpeningScreen(data.case);
+                }
+            } catch (error) {
+                console.error('Error selecting case:', error);
             }
         }
 
@@ -440,7 +589,9 @@
                     const color = skin.color || '#ffffff';
                     items += `
                         <div class="roulette-item" style="border-color: ${color}">
-                            <div class="item-image">🎨</div>
+                            <img src="${skin.image_url || 'https://via.placeholder.com/100'}" 
+                                 alt="${skin.name}"
+                                 onerror="this.parentElement.querySelector('img').style.display='none'">
                             <div class="item-name" style="color: ${color}">${skin.name}</div>
                         </div>
                     `;
@@ -461,34 +612,41 @@
             
             // Проверяем баланс
             if (userData.balance < currentCase.price) {
-                showWarning('Недостаточно средств!');
+                showWarning('Недостаточно средств! Пополните баланс в боте.');
                 return;
             }
             
             isOpening = true;
             document.getElementById('openButton').style.display = 'none';
             
-            // Отправляем запрос на открытие
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    action: 'open_case',
-                    user_id: userId,
-                    case_id: currentCase.id
-                })
-            });
-            const data = await response.json();
-            
-            if (data.success) {
-                // Обновляем баланс
-                updateBalance(data.new_balance);
-                userData.balance = data.new_balance;
+            try {
+                // Отправляем запрос на открытие
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        action: 'open_case',
+                        user_id: userId,
+                        case_id: currentCase.id
+                    })
+                });
+                const data = await response.json();
                 
-                // Запускаем анимацию
-                animateRoulette(data.skin);
-            } else {
-                showWarning(data.error);
+                if (data.success) {
+                    // Обновляем баланс
+                    updateBalance(data.new_balance);
+                    userData.balance = data.new_balance;
+                    
+                    // Запускаем анимацию
+                    animateRoulette(data.skin);
+                } else {
+                    showWarning(data.error);
+                    isOpening = false;
+                    document.getElementById('openButton').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error opening case:', error);
+                showWarning('Произошла ошибка. Попробуйте еще раз.');
                 isOpening = false;
                 document.getElementById('openButton').style.display = 'block';
             }
@@ -501,12 +659,11 @@
             
             // Находим позицию выигрышного скина
             const winIndex = skins.findIndex(s => s.id === winningSkin.id);
-            const itemWidth = 150;
-            const totalWidth = skins.length * itemWidth * 10; // 10 повторений
+            const itemWidth = 160;
             
             // Случайная позиция с выигрышным скином
-            const randomSet = Math.floor(Math.random() * 5) + 5;
-            const targetPosition = -(randomSet * skins.length * itemWidth + winIndex * itemWidth);
+            const randomSets = Math.floor(Math.random() * 5) + 5; // 5-9 повторений
+            const targetPosition = -(randomSets * skins.length * itemWidth + winIndex * itemWidth);
             
             // Добавляем случайное смещение для реалистичности
             const offset = (Math.random() - 0.5) * (itemWidth * 0.6);
@@ -525,12 +682,17 @@
 
         // Показать результат
         function showResult(skin) {
-            document.getElementById('resultImage').textContent = '🎨';
+            document.getElementById('resultImage').innerHTML = `
+                <img src="${skin.image_url || 'https://via.placeholder.com/200'}" 
+                     alt="${skin.name}"
+                     onerror="this.src='https://via.placeholder.com/200'">
+            `;
             document.getElementById('resultName').textContent = skin.name;
             document.getElementById('resultRarity').textContent = skin.rarity;
             document.getElementById('resultRarity').style.backgroundColor = skin.color + '33';
             document.getElementById('resultRarity').style.color = skin.color;
-            document.getElementById('resultPrice').textContent = `💰 ${skin.price.toFixed(2)}`;
+            document.getElementById('resultRarity').style.border = `1px solid ${skin.color}`;
+            document.getElementById('resultPrice').innerHTML = `💰 Стоимость: <b>${skin.price.toFixed(2)}</b>`;
             
             document.getElementById('resultScreen').classList.add('active');
             isOpening = false;
@@ -538,22 +700,25 @@
 
         // Эффект конфетти
         function createSparkles() {
-            for (let i = 0; i < 50; i++) {
+            const colors = ['#ffd700', '#ff6b6b', '#4ecdc4', '#45b7d1', '#ff9ff3', '#feca57'];
+            const screen = document.getElementById('openingScreen');
+            
+            for (let i = 0; i < 80; i++) {
                 setTimeout(() => {
                     const sparkle = document.createElement('div');
                     sparkle.className = 'sparkle';
-                    sparkle.style.left = '50%';
-                    sparkle.style.top = '50%';
+                    sparkle.style.left = Math.random() * 100 + '%';
+                    sparkle.style.top = Math.random() * 100 + '%';
                     sparkle.style.setProperty('--tx', (Math.random() - 0.5) * 400 + 'px');
                     sparkle.style.setProperty('--ty', (Math.random() - 0.5) * 400 + 'px');
-                    sparkle.style.color = ['#ffd700', '#ff6b6b', '#4ecdc4', '#45b7d1'][Math.floor(Math.random() * 4)];
-                    sparkle.textContent = '✦';
+                    sparkle.style.color = colors[Math.floor(Math.random() * colors.length)];
                     sparkle.style.fontSize = Math.random() * 20 + 10 + 'px';
+                    sparkle.textContent = ['✦', '✧', '♦', '★', '✶'][Math.floor(Math.random() * 5)];
                     
-                    document.getElementById('openingScreen').appendChild(sparkle);
+                    screen.appendChild(sparkle);
                     
                     setTimeout(() => sparkle.remove(), 1000);
-                }, i * 30);
+                }, i * 20);
             }
         }
 
@@ -611,32 +776,49 @@
 
         // Загрузка истории
         async function loadHistory() {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    action: 'get_history',
-                    user_id: userId
-                })
-            });
-            const data = await response.json();
-            
-            if (data.success) {
-                const container = document.getElementById('historyList');
-                container.innerHTML = data.history.map(item => `
-                    <div class="history-item">
-                        <div class="skin-image">🎨</div>
-                        <div>
-                            <div style="color: ${item.color || 'white'}">${item.skin_name}</div>
-                            <div style="font-size: 12px; opacity: 0.7;">
-                                ${item.case_name} • ${new Date(item.time).toLocaleDateString()}
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        action: 'get_history',
+                        user_id: userId
+                    })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    const container = document.getElementById('historyList');
+                    if (data.history.length === 0) {
+                        container.innerHTML = '<div style="text-align: center; padding: 40px; opacity: 0.5;">История пуста</div>';
+                    } else {
+                        container.innerHTML = data.history.map(item => `
+                            <div class="history-item">
+                                <img src="${item.image_url || 'https://via.placeholder.com/50'}" 
+                                     alt="${item.skin_name}"
+                                     onerror="this.style.display='none'">
+                                <div class="history-info">
+                                    <div class="history-name" style="color: ${item.color || 'white'}">
+                                        ${item.skin_name}
+                                    </div>
+                                    <div class="history-details">
+                                        ${item.case_name} • ${new Date(item.time).toLocaleDateString()}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="history-rarity" style="color: ${item.color || 'white'}">
+                                        ${item.rarity}
+                                    </div>
+                                    <div style="font-size: 12px; opacity: 0.7; text-align: right;">
+                                        💰 ${item.price.toFixed(2)}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div style="margin-left: auto; color: ${item.color || 'white'}">
-                            ${item.rarity}
-                        </div>
-                    </div>
-                `).join('');
+                        `).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
             }
         }
 

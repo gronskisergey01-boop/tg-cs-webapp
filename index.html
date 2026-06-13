@@ -180,7 +180,6 @@
             box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
         }
 
-        /* Эффект свечения для указателя */
         .pointer::before {
             content: '';
             position: absolute;
@@ -284,7 +283,6 @@
             background: rgba(255, 255, 255, 0.1);
         }
 
-        /* Анимации */
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -301,7 +299,6 @@
             50% { transform: translateY(-10px); }
         }
 
-        /* Конфетти */
         .sparkle {
             position: fixed;
             pointer-events: none;
@@ -320,7 +317,6 @@
             }
         }
 
-        /* История */
         .history-item {
             background: rgba(255, 255, 255, 0.05);
             padding: 15px;
@@ -363,7 +359,6 @@
             font-size: 14px;
         }
 
-        /* Табы */
         .tabs {
             display: flex;
             margin: 20px 0;
@@ -399,7 +394,6 @@
             animation: fadeInUp 0.3s ease;
         }
 
-        /* Загрузка */
         .loading {
             display: inline-block;
             width: 20px;
@@ -441,7 +435,6 @@
         </div>
     </div>
 
-    <!-- Экран открытия кейса -->
     <div class="opening-screen" id="openingScreen">
         <button class="close-btn" onclick="closeOpening()">✕</button>
         
@@ -460,7 +453,6 @@
         </button>
     </div>
 
-    <!-- Экран результата -->
     <div class="result-screen" id="resultScreen">
         <h2>🎉 ВЫ ПОЛУЧИЛИ!</h2>
         <div class="result-skin" id="resultImage"></div>
@@ -477,61 +469,95 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         const tg = window.Telegram.WebApp;
-        const API_URL = '/api';
+        
+        // 🔧 ЗАМЕНИТЕ ЭТОТ АДРЕС НА ВАШ ИЗ xTunnel
+        const API_URL = 'https://3bca674f-9245-48bb-ba8e-7f9093d0529e.tunnel4.com';
         
         let currentCase = null;
         let userData = null;
         let isOpening = false;
 
-        // Инициализация
         tg.ready();
         tg.expand();
 
-        // Получаем user_id
-        const userId = tg.initDataUnsafe?.user?.id || 1;
+        const userId = tg.initDataUnsafe?.user?.id;
+        
+        if (!userId) {
+            console.error('No user ID found');
+            document.getElementById('balance').textContent = 'Ошибка авторизации';
+        }
 
-        // Загрузка данных пользователя
-        async function loadUserData() {
+        async function fetchAPI(action, data = {}) {
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
-                        action: 'get_user',
-                        user_id: userId
-                    })
+                        action: action,
+                        user_id: userId,
+                        ...data
+                    }),
+                    signal: controller.signal
                 });
-                const data = await response.json();
-                if (data.success) {
-                    userData = data.user;
-                    updateBalance(userData.balance);
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
                 }
+                
+                return await response.json();
             } catch (error) {
-                console.error('Error loading user data:', error);
+                console.error(`API Error (${action}):`, error);
+                throw error;
             }
         }
 
-        // Загрузка кейсов
+        async function loadUserData(retries = 3) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const data = await fetchAPI('get_user');
+                    if (data.success) {
+                        userData = data.user;
+                        updateBalance(userData.balance);
+                        return true;
+                    }
+                } catch (error) {
+                    console.log(`Attempt ${i + 1} failed:`, error);
+                    if (i === retries - 1) {
+                        document.getElementById('balance').textContent = 'Ошибка загрузки';
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+            }
+            return false;
+        }
+
         async function loadCases() {
             try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        action: 'get_cases',
-                        user_id: userId
-                    })
-                });
-                const data = await response.json();
+                const data = await fetchAPI('get_cases');
                 if (data.success) {
                     displayCases(data.cases);
+                } else {
+                    throw new Error('Failed to load cases');
                 }
             } catch (error) {
                 console.error('Error loading cases:', error);
+                const container = document.getElementById('casesList');
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.5);">
+                        <p>❌ Ошибка загрузки кейсов</p>
+                        <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #ffd700; border: none; border-radius: 10px; cursor: pointer;">
+                            🔄 Повторить
+                        </button>
+                    </div>
+                `;
             }
         }
 
-        // Отображение кейсов
         function displayCases(cases) {
             const container = document.getElementById('casesList');
             container.innerHTML = cases.map(c => `
@@ -548,21 +574,11 @@
             `).join('');
         }
 
-        // Выбор кейса
         async function selectCase(caseId) {
             if (isOpening) return;
             
             try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        action: 'get_case',
-                        user_id: userId,
-                        case_id: caseId
-                    })
-                });
-                const data = await response.json();
+                const data = await fetchAPI('get_case', { case_id: caseId });
                 
                 if (data.success) {
                     currentCase = data.case;
@@ -570,20 +586,18 @@
                 }
             } catch (error) {
                 console.error('Error selecting case:', error);
+                showWarning('Ошибка загрузки кейса');
             }
         }
 
-        // Показать экран открытия
         function showOpeningScreen(caseData) {
             document.getElementById('openingCaseName').textContent = caseData.name;
             document.getElementById('openPrice').textContent = caseData.price.toFixed(2);
             
-            // Создаем рулетку
             const strip = document.getElementById('rouletteStrip');
             const skins = caseData.skins;
             let items = '';
             
-            // Повторяем скины для длинной ленты
             for (let i = 0; i < 20; i++) {
                 skins.forEach(skin => {
                     const color = skin.color || '#ffffff';
@@ -606,11 +620,9 @@
             document.getElementById('openButton').style.display = 'block';
         }
 
-        // Запуск открытия
         async function startOpening() {
             if (isOpening || !currentCase) return;
             
-            // Проверяем баланс
             if (userData.balance < currentCase.price) {
                 showWarning('Недостаточно средств! Пополните баланс в боте.');
                 return;
@@ -620,24 +632,11 @@
             document.getElementById('openButton').style.display = 'none';
             
             try {
-                // Отправляем запрос на открытие
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        action: 'open_case',
-                        user_id: userId,
-                        case_id: currentCase.id
-                    })
-                });
-                const data = await response.json();
+                const data = await fetchAPI('open_case', { case_id: currentCase.id });
                 
                 if (data.success) {
-                    // Обновляем баланс
                     updateBalance(data.new_balance);
                     userData.balance = data.new_balance;
-                    
-                    // Запускаем анимацию
                     animateRoulette(data.skin);
                 } else {
                     showWarning(data.error);
@@ -652,35 +651,27 @@
             }
         }
 
-        // Анимация рулетки
         function animateRoulette(winningSkin) {
             const strip = document.getElementById('rouletteStrip');
             const skins = currentCase.skins;
             
-            // Находим позицию выигрышного скина
             const winIndex = skins.findIndex(s => s.id === winningSkin.id);
             const itemWidth = 160;
             
-            // Случайная позиция с выигрышным скином
-            const randomSets = Math.floor(Math.random() * 5) + 5; // 5-9 повторений
+            const randomSets = Math.floor(Math.random() * 5) + 5;
             const targetPosition = -(randomSets * skins.length * itemWidth + winIndex * itemWidth);
-            
-            // Добавляем случайное смещение для реалистичности
             const offset = (Math.random() - 0.5) * (itemWidth * 0.6);
             const finalPosition = targetPosition + offset;
             
-            // Запускаем анимацию
             strip.style.transition = 'transform 4s cubic-bezier(0.12, 0.8, 0.3, 1)';
             strip.style.transform = `translateX(${finalPosition}px)`;
             
-            // Показываем результат после анимации
             setTimeout(() => {
                 showResult(winningSkin);
                 createSparkles();
             }, 4200);
         }
 
-        // Показать результат
         function showResult(skin) {
             document.getElementById('resultImage').innerHTML = `
                 <img src="${skin.image_url || 'https://via.placeholder.com/200'}" 
@@ -698,7 +689,6 @@
             isOpening = false;
         }
 
-        // Эффект конфетти
         function createSparkles() {
             const colors = ['#ffd700', '#ff6b6b', '#4ecdc4', '#45b7d1', '#ff9ff3', '#feca57'];
             const screen = document.getElementById('openingScreen');
@@ -722,21 +712,18 @@
             }
         }
 
-        // Закрыть экран открытия
         function closeOpening() {
             if (isOpening) return;
             document.getElementById('openingScreen').classList.remove('active');
             currentCase = null;
         }
 
-        // Закрыть результат
         function closeResult() {
             document.getElementById('resultScreen').classList.remove('active');
             document.getElementById('openingScreen').classList.remove('active');
             currentCase = null;
         }
 
-        // Открыть снова
         function openAgain() {
             document.getElementById('resultScreen').classList.remove('active');
             if (currentCase) {
@@ -744,12 +731,10 @@
             }
         }
 
-        // Обновление баланса
         function updateBalance(amount) {
             document.getElementById('balance').textContent = `${amount.toFixed(2)} 💰`;
         }
 
-        // Показать предупреждение
         function showWarning(message) {
             const warning = document.getElementById('warningMessage');
             warning.textContent = message;
@@ -759,7 +744,6 @@
             }, 3000);
         }
 
-        // Переключение вкладок
         async function showTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
@@ -774,18 +758,9 @@
             }
         }
 
-        // Загрузка истории
         async function loadHistory() {
             try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        action: 'get_history',
-                        user_id: userId
-                    })
-                });
-                const data = await response.json();
+                const data = await fetchAPI('get_history');
                 
                 if (data.success) {
                     const container = document.getElementById('historyList');
@@ -822,14 +797,16 @@
             }
         }
 
-        // Инициализация приложения
         async function initApp() {
-            await loadUserData();
-            await loadCases();
+            const userLoaded = await loadUserData();
+            if (userLoaded) {
+                await loadCases();
+            }
         }
 
-        // Запуск
-        initApp();
+        window.addEventListener('load', () => {
+            initApp();
+        });
     </script>
 </body>
 </html>

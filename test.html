@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CS2 Test</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <h1>CS2 Case Opener - Test</h1>
+    <div id="status">Загрузка...</div>
+    <div id="balance"></div>
+    <div id="cases"></div>
+    
+    <script>
+        const API_URL = 'https://3bdef556-99ed-41f0-8d2d-fa8f7a4e4fb4.tunnel4.com/api';
+        
+        window.addEventListener('load', async function() {
+            console.log('✅ Page loaded');
+            
+            const tg = window.Telegram.WebApp;
+            tg.ready();
+            tg.expand();
+            
+            const userId = tg.initDataUnsafe?.user?.id;
+            document.getElementById('status').innerHTML = `User ID: ${userId || 'NOT FOUND'}`;
+            
+            if (!userId) {
+                document.getElementById('status').innerHTML = '❌ User ID not found! Close and reopen from bot.';
+                return;
+            }
+            
+            // Запрос к API
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        action: 'get_user',
+                        user_id: userId
+                    })
+                });
+                
+                const data = await response.json();
+                document.getElementById('balance').innerHTML = `Balance: ${data.user?.balance || 'Error'} 💰`;
+                document.getElementById('status').innerHTML = '✅ API работает!';
+            } catch (error) {
+                document.getElementById('status').innerHTML = `❌ API Error: ${error.message}`;
+                document.getElementById('balance').innerHTML = `Error: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>

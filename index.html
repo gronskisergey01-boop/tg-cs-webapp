@@ -105,7 +105,6 @@
             margin-top: 5px;
         }
 
-        /* Экран открытия */
         .opening-screen {
             display: none;
             position: fixed;
@@ -468,26 +467,60 @@
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-        const tg = window.Telegram.WebApp;
-        
-        // 🔧 ЗАМЕНИТЕ ЭТОТ АДРЕС НА ВАШ ИЗ xTunnel
-        const API_URL = ' https://3bdef556-99ed-41f0-8d2d-fa8f7a4e4fb4.tunnel4.com/api';
+        // ВАЖНО: Замените на ваш адрес из xTunnel
+        const API_URL = 'https://3bdef556-99ed-41f0-8d2d-fa8f7a4e4fb4.tunnel4.com/api';
         
         let currentCase = null;
         let userData = null;
         let isOpening = false;
 
-        tg.ready();
-        tg.expand();
-
-        const userId = tg.initDataUnsafe?.user?.id;
+        // Ждем полной загрузки страницы и Telegram WebApp
+        window.addEventListener('load', async function() {
+            console.log('📱 Page loaded, initializing...');
+            
+            const tg = window.Telegram.WebApp;
+            tg.ready();
+            tg.expand();
+            
+            const userId = tg.initDataUnsafe?.user?.id;
+            console.log('👤 User ID:', userId);
+            console.log('📦 Full initData:', tg.initDataUnsafe);
+            
+            if (!userId) {
+                console.error('❌ No user ID found!');
+                document.getElementById('balance').textContent = 'Ошибка авторизации';
+                const container = document.getElementById('casesList');
+                if (container) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <p>❌ Ошибка авторизации</p>
+                            <p style="font-size: 12px; margin-top: 10px;">Не удалось получить ID пользователя</p>
+                            <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #ffd700; border: none; border-radius: 10px; cursor: pointer;">
+                                🔄 Перезагрузить
+                            </button>
+                        </div>
+                    `;
+                }
+                return;
+            }
+            
+            // Сохраняем userId в глобальную переменную
+            window.userId = userId;
+            
+            // Загружаем данные
+            await loadUserData();
+            await loadCases();
+        });
         
-        if (!userId) {
-            console.error('No user ID found');
-            document.getElementById('balance').textContent = 'Ошибка авторизации';
-        }
-
         async function fetchAPI(action, data = {}) {
+            const requestData = {
+                action: action,
+                user_id: window.userId,
+                ...data
+            };
+            
+            console.log(`📤 Sending ${action}:`, requestData);
+            
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -495,23 +528,24 @@
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        action: action,
-                        user_id: userId,
-                        ...data
-                    }),
+                    body: JSON.stringify(requestData),
                     signal: controller.signal
                 });
                 
                 clearTimeout(timeoutId);
                 
+                console.log(`📥 Response status:`, response.status);
+                
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}`);
                 }
                 
-                return await response.json();
+                const result = await response.json();
+                console.log(`📦 Response data:`, result);
+                return result;
+                
             } catch (error) {
-                console.error(`API Error (${action}):`, error);
+                console.error(`❌ API Error (${action}):`, error);
                 throw error;
             }
         }
@@ -519,16 +553,21 @@
         async function loadUserData(retries = 3) {
             for (let i = 0; i < retries; i++) {
                 try {
+                    console.log(`🔄 Loading user data, attempt ${i + 1}...`);
                     const data = await fetchAPI('get_user');
                     if (data.success) {
                         userData = data.user;
                         updateBalance(userData.balance);
+                        console.log('✅ User data loaded:', userData);
                         return true;
+                    } else {
+                        console.log('⚠️ API returned error:', data.error);
                     }
                 } catch (error) {
-                    console.log(`Attempt ${i + 1} failed:`, error);
+                    console.log(`⚠️ Attempt ${i + 1} failed:`, error);
                     if (i === retries - 1) {
                         document.getElementById('balance').textContent = 'Ошибка загрузки';
+                        showWarning('Не удалось загрузить данные пользователя');
                     }
                     await new Promise(resolve => setTimeout(resolve, 1000));
                 }
@@ -538,18 +577,21 @@
 
         async function loadCases() {
             try {
+                console.log('🔄 Loading cases...');
                 const data = await fetchAPI('get_cases');
                 if (data.success) {
                     displayCases(data.cases);
+                    console.log('✅ Cases loaded:', data.cases.length);
                 } else {
                     throw new Error('Failed to load cases');
                 }
             } catch (error) {
-                console.error('Error loading cases:', error);
+                console.error('❌ Error loading cases:', error);
                 const container = document.getElementById('casesList');
                 container.innerHTML = `
                     <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.5);">
                         <p>❌ Ошибка загрузки кейсов</p>
+                        <p style="font-size: 12px; margin-top: 10px;">${error.message}</p>
                         <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #ffd700; border: none; border-radius: 10px; cursor: pointer;">
                             🔄 Повторить
                         </button>
@@ -560,6 +602,11 @@
 
         function displayCases(cases) {
             const container = document.getElementById('casesList');
+            if (!cases || cases.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px;">Нет доступных кейсов</div>';
+                return;
+            }
+            
             container.innerHTML = cases.map(c => `
                 <div class="case-card" onclick="selectCase(${c.id})">
                     <div class="case-image">
@@ -732,7 +779,10 @@
         }
 
         function updateBalance(amount) {
-            document.getElementById('balance').textContent = `${amount.toFixed(2)} 💰`;
+            const balanceEl = document.getElementById('balance');
+            if (balanceEl) {
+                balanceEl.textContent = `${amount.toFixed(2)} 💰`;
+            }
         }
 
         function showWarning(message) {
@@ -745,8 +795,11 @@
         }
 
         async function showTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(t => t.classList.remove('active'));
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
             
             if (tab === 'cases') {
                 document.getElementById('cases-tab').style.display = 'block';
@@ -796,17 +849,6 @@
                 console.error('Error loading history:', error);
             }
         }
-
-        async function initApp() {
-            const userLoaded = await loadUserData();
-            if (userLoaded) {
-                await loadCases();
-            }
-        }
-
-        window.addEventListener('load', () => {
-            initApp();
-        });
     </script>
 </body>
 </html>
